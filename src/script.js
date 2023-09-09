@@ -18,30 +18,52 @@ const canvas = document.querySelector("canvas.webgl");
 // Scene
 const scene = new THREE.Scene();
 
+debugObject.fog = {};
+debugObject.fog.color = new THREE.Color(0xa0a0a0);
+debugObject.fog.near = 0.25;
+debugObject.fog.far = 8;
+debugObject.fog.density = 0.5;
+
+scene.fog = new THREE.Fog(
+  debugObject.fog.color,
+  debugObject.fog.near,
+  debugObject.fog.far,
+  debugObject.fog.density
+);
+scene.background = debugObject.fog.color;
+
 /**
  * Water
  */
 // Geometry
-const waterGeometry = new THREE.PlaneGeometry(2, 2, 128, 128);
+const waterGeometry = new THREE.PlaneGeometry(20, 20, 512, 512);
 
 // Colors
-debugObject.depthColor = 0x0000ff;
-debugObject.surfaceColor = 0x8888ff;
+debugObject.depthColor = 0x186691;
+debugObject.surfaceColor = 0x9bd8ff;
 
 // Material
 const waterMaterial = new THREE.ShaderMaterial({
   vertexShader: waterVertexShader,
   fragmentShader: waterFragmentShader,
-  uniforms: {
-    uBigWaveElevation: { value: 0.2 },
-    uBigWaveFrequency: { value: new THREE.Vector2(4, 4) },
-    uTime: { value: 0 },
-    uBigWaveSpeed: { value: 0.75 },
-    uDepthColor: { value: new THREE.Color(debugObject.depthColor) },
-    uSurfaceColor: { value: new THREE.Color(debugObject.surfaceColor) },
-    uColorOffset: { value: 0.08 },
-    uColorMultiplier: { value: 5 },
-  },
+  fog: true,
+  uniforms: THREE.UniformsUtils.merge([
+    THREE.UniformsLib["fog"],
+    {
+      uBigWaveElevation: { value: 0.2 },
+      uBigWaveFrequency: { value: new THREE.Vector2(1, 1) },
+      uTime: { value: 0 },
+      uBigWaveSpeed: { value: 0.75 },
+      uDepthColor: { value: new THREE.Color(debugObject.depthColor) },
+      uSurfaceColor: { value: new THREE.Color(debugObject.surfaceColor) },
+      uColorOffset: { value: 0.08 },
+      uColorMultiplier: { value: 5 },
+      uSmallWavesElevation: { value: 0.15 },
+      uSmallWavesFrequency: { value: 3 },
+      uSmallWavesSpeed: { value: 0.2 },
+      uSmallWavesIterations: { value: 3 },
+    },
+  ]),
 });
 
 gui
@@ -63,7 +85,7 @@ gui
   .min(0)
   .max(10)
   .step(0.05)
-  .name("uBigWaveFrequency.x");
+  .name("uBigWaveFrequency.y");
 
 gui
   .add(waterMaterial.uniforms.uBigWaveSpeed, "value")
@@ -100,10 +122,79 @@ gui
   .step(0.2)
   .name("uColorMultiplier");
 
+gui
+  .add(waterMaterial.uniforms.uSmallWavesElevation, "value")
+  .min(0)
+  .max(1)
+  .step(0.1)
+  .name("uSmallWavesElevation");
+
+gui
+  .add(waterMaterial.uniforms.uSmallWavesFrequency, "value")
+  .min(0)
+  .max(10)
+  .step(0.1)
+  .name("uSmallWavesFrequency");
+
+gui
+  .add(waterMaterial.uniforms.uSmallWavesSpeed, "value")
+  .min(0)
+  .max(1)
+  .step(0.1)
+  .name("uSmallWavesSpeed");
+
+gui
+  .add(waterMaterial.uniforms.uSmallWavesIterations, "value")
+  .min(0)
+  .max(10)
+  .step(1)
+  .name("uSmallWavesIterations");
+
+gui
+  .addColor(debugObject.fog, "color")
+  .name("fogColor")
+  .onChange(() => {
+    scene.fog.color = debugObject.fog.color;
+  });
+
+gui
+  .add(debugObject.fog, "near")
+  .min(0)
+  .max(10)
+  .step(0.1)
+  .name("fogNear")
+  .onChange(() => {
+    scene.fog.near = debugObject.fog.near;
+  });
+
+gui
+  .add(debugObject.fog, "far")
+  .min(0)
+  .max(10)
+  .step(0.1)
+  .name("fogFar")
+  .onChange(() => {
+    scene.fog.far = debugObject.fog.far;
+  });
+
+gui
+  .add(debugObject.fog, "density")
+  .min(0)
+  .max(10)
+  .step(0.1)
+  .name("fogDensity")
+  .onChange(() => {
+    scene.fog.density = debugObject.fog.density;
+  });
+
 // Mesh
 const water = new THREE.Mesh(waterGeometry, waterMaterial);
 water.rotation.x = -Math.PI * 0.5;
 scene.add(water);
+
+// Light
+const light = new THREE.DirectionalLight(0xffffff, 0.8);
+scene.add(light);
 
 /**
  * Sizes
