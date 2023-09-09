@@ -27,7 +27,41 @@ const waterGeometry = new THREE.PlaneGeometry(2, 2, 128, 128);
 const waterMaterial = new THREE.ShaderMaterial({
   vertexShader: waterVertexShader,
   fragmentShader: waterFragmentShader,
+  uniforms: {
+    uBigWaveElevation: { value: 0.2 },
+    uBigWaveFrequency: { value: new THREE.Vector2(4, 4) },
+    uTime: { value: 0 },
+    uBigWaveSpeed: { value: 0.75 },
+  },
 });
+
+gui
+  .add(waterMaterial.uniforms.uBigWaveElevation, "value")
+  .min(0)
+  .max(1)
+  .step(0.05)
+  .name("uBigWaveElevation");
+
+gui
+  .add(waterMaterial.uniforms.uBigWaveFrequency.value, "x")
+  .min(0)
+  .max(10)
+  .step(0.05)
+  .name("uBigWaveFrequency.x");
+
+gui
+  .add(waterMaterial.uniforms.uBigWaveFrequency.value, "y")
+  .min(0)
+  .max(10)
+  .step(0.05)
+  .name("uBigWaveFrequency.x");
+
+gui
+  .add(waterMaterial.uniforms.uBigWaveSpeed, "value")
+  .min(0)
+  .max(10)
+  .step(0.05)
+  .name("uBigWaveSpeed");
 
 // Mesh
 const water = new THREE.Mesh(waterGeometry, waterMaterial);
@@ -89,6 +123,9 @@ const clock = new THREE.Clock();
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
+
+  // Water
+  waterMaterial.uniforms.uTime.value = elapsedTime;
 
   // Update controls
   controls.update();
